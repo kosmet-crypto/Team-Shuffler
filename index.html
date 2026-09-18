@@ -46,7 +46,6 @@
   /* ============ HEADER ============ */
   header { text-align: center; margin-bottom: 22px; }
 
-  /* Shuffle icon: three arrows in a circular motion */
   .shuffle-icon {
     width: 56px; height: 56px; margin: 0 auto 12px;
     display: grid; place-items: center;
@@ -234,7 +233,6 @@
     font-size: .74rem; color: #6b7aa1; line-height: 1.45; margin-bottom: 12px;
   }
 
-  /* Position chip grid */
   .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     min-width: 42px; padding: 10px 12px; border-radius: 11px;
@@ -252,7 +250,6 @@
   .chip-group .chip.on { background: linear-gradient(180deg, #22d3ee, #0891b2); color: #04222b; box-shadow: 0 4px 12px rgba(34,211,238,.25); }
   .chip-sep .chip.on { background: linear-gradient(180deg, #f87171, #dc2626); color: #2a0808; box-shadow: 0 4px 12px rgba(239,68,68,.25); }
 
-  /* Saved rosters */
   .roster-item {
     display: flex; align-items: center; gap: 10px; padding: 11px 12px;
     background: #0e1730; border: 1px solid var(--stroke); border-radius: 12px;
@@ -274,7 +271,6 @@
     padding: 16px; border: 1px dashed var(--stroke); border-radius: 12px;
   }
 
-  /* Toast */
   #toast {
     position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
     transform: translate(-50%, 140%); background: #b91c1c; color: #fff;
@@ -294,7 +290,6 @@
 
   <header>
     <div class="shuffle-icon" aria-hidden="true">
-      <!-- Shuffle arrows icon -->
       <svg viewBox="0 0 24 24">
         <path d="M16 3h5v5" />
         <path d="M4 20 21 3" />
@@ -312,7 +307,7 @@
     <div class="panel-title">1 · Participants</div>
     <div class="field">
       <label for="participantCount">Number of participants</label>
-      <select id="participantCount"><!-- filled by JS --></select>
+      <select id="participantCount"></select>
     </div>
     <div class="field">
       <label for="teamCount">Number of teams</label>
@@ -330,6 +325,8 @@
     <div id="participantList"></div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn-secondary" id="btnSaveRoster" type="button">Save this list</button>
+      <button class="btn-secondary" id="btnImportRoster" type="button">Load from file</button>
+      <input type="file" id="fileInput" accept=".txt,.json" style="display:none">
     </div>
   </section>
 
@@ -374,26 +371,9 @@
 <div id="toast" role="status"></div>
 
 <script>
-/* ==================================================================
-   TEAM SHUFFLER
-   ------------------------------------------------------------------
-   Public:
-     • Pick participant count and team count.
-     • Type names, optionally save/load a list.
-     • "Generate Teams" produces a balanced, shuffled result.
-
-   Hidden setup panel (admin sheet):
-     • Open by tapping the shuffle icon 5 times quickly.
-     • "Must stay together" — chosen positions always share a team.
-     • "Must be kept apart" — chosen positions never share a team.
-     • Either rule may be used alone, both together, or neither.
-     • Rules live in memory only; nothing is shown on the main screen.
-   ================================================================== */
-
 (function () {
   'use strict';
 
-  /* ---------- DOM ---------- */
   const $ = id => document.getElementById(id);
   const countSelect = $('participantCount');
   const teamSelect  = $('teamCount');
@@ -408,32 +388,35 @@
   const sepChipsEl    = $('sepChips');
   const rosterListEl  = $('rosterList');
   const btnSaveRoster = $('btnSaveRoster');
+  const btnImportRoster = $('btnImportRoster');
+  const fileInput     = $('fileInput');
   const btnClearRules = $('btnClearRules');
 
-  /* ---------- Config ---------- */
   const MIN_PARTICIPANTS = 4;
   const MAX_PARTICIPANTS = 16;
   const TEAM_COLORS = ['#22d3ee', '#f97316', '#a78bfa', '#34d399', '#f472b6', '#facc15'];
   const TEAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  /* ---------- Hidden rules state ----------
-     Stored only in memory. Empty arrays = completely random draw.
-     `group`   : positions forced into one team
-     `separate`: positions forced into different teams          */
   const rules = {
     group: [],
     separate: []
   };
 
-  /* ---------- Saved rosters (in-memory) ----------
-     Browser storage is unavailable in the preview sandbox, so lists
-     persist for the current session only. In a packaged app these
-     calls can be swapped for localStorage with one line.         */
-  const savedRosters = [];
+  /* LocalStorage Rosters */
+  let savedRosters = [];
+  try {
+    const stored = localStorage.getItem('team_shuffler_rosters');
+    if (stored) savedRosters = JSON.parse(stored);
+  } catch (e) {
+    savedRosters = [];
+  }
 
-  /* ==================================================================
-     UTILITIES
-     ================================================================== */
+  function persistRosters() {
+    try {
+      localStorage.setItem('team_shuffler_rosters', JSON.stringify(savedRosters));
+    } catch (e) {}
+  }
+
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -457,9 +440,6 @@
     }[c]));
   }
 
-  /* ==================================================================
-     COUNT DROPDOWN
-     ================================================================== */
   for (let n = MIN_PARTICIPANTS; n <= MAX_PARTICIPANTS; n++) {
     const opt = document.createElement('option');
     opt.value = String(n);
@@ -468,9 +448,6 @@
   }
   countSelect.value = '8';
 
-  /* ==================================================================
-     PARTICIPANT INPUT ROWS
-     ================================================================== */
   function renderParticipantInputs(count, presetValues) {
     const previous = presetValues || Array.from(
       listEl.querySelectorAll('input[type="text"]')
@@ -505,20 +482,15 @@
       listEl.appendChild(row);
     }
 
-    /* Rules may reference positions that no longer exist. */
     pruneRules(count);
     renderChips(count);
   }
 
-  /* Drop out-of-range positions after the count changes. */
   function pruneRules(count) {
     rules.group    = rules.group.filter(p => p <= count);
     rules.separate = rules.separate.filter(p => p <= count);
   }
 
-  /* ==================================================================
-     NAMES
-     ================================================================== */
   function collectNames() {
     const inputs = Array.from(listEl.querySelectorAll('input[type="text"]'));
     const entries = inputs.map((inp, i) => ({ index: i + 1, name: inp.value.trim() }));
@@ -540,14 +512,6 @@
     return entries;
   }
 
-  /* ==================================================================
-     DRAW ENGINE
-     ------------------------------------------------------------------
-     Phase A : place "group" positions into one team
-     Phase B : place "separate" positions into distinct teams
-     Phase C : fill everyone else, balancing team sizes to ±1
-     Phase D : shuffle inside each team and shuffle card order
-     ================================================================== */
   function buildTeams(entries, teamCount) {
     const nTeams = Math.min(teamCount, entries.length);
     const buckets = Array.from({ length: nTeams }, () => []);
@@ -555,9 +519,6 @@
 
     const placed = new Set();
 
-    /* ---------- Phase A: the "stay together" group ----------
-       All group positions share one randomly chosen team, so the
-       target team is not predictable from run to run.            */
     const groupEntries = rules.group
       .map(p => byIndex.get(p))
       .filter(Boolean);
@@ -570,10 +531,6 @@
       }
     }
 
-    /* ---------- Phase B: the "keep apart" positions ----------
-       Each goes to a distinct team. If there are more of them than
-       teams, the extras fall back to the least-loaded team rather
-       than failing the draw.                                     */
     const sepEntries = rules.separate
       .map(p => byIndex.get(p))
       .filter(Boolean)
@@ -597,7 +554,6 @@
       }
     }
 
-    /* ---------- Phase C: everyone else, balanced ---------- */
     const pool = shuffle(entries.filter(e => !placed.has(e.index)));
 
     const base = Math.floor(entries.length / nTeams);
@@ -607,14 +563,12 @@
     );
     const targetSize = buckets.map((_, i) => base + (extraTeams.has(i) ? 1 : 0));
 
-    /* Top up teams that are under target, in random order. */
     for (const t of shuffle(buckets.map((_, i) => i))) {
       while (buckets[t].length < targetSize[t] && pool.length) {
         buckets[t].push(pool.pop());
       }
     }
 
-    /* Any surplus lands on the currently smallest team. */
     while (pool.length) {
       const sizes = buckets.map(b => b.length);
       const min = Math.min(...sizes);
@@ -622,15 +576,11 @@
       buckets[candidates[0]].push(pool.pop());
     }
 
-    /* ---------- Phase D: scramble visible order ---------- */
     for (const b of buckets) shuffle(b);
 
     return buckets;
   }
 
-  /* ==================================================================
-     RENDER RESULTS
-     ================================================================== */
   function renderResults(buckets) {
     const cardOrder = shuffle(buckets.map((_, i) => i));
     const now = new Date();
@@ -660,9 +610,6 @@
     resultsEl.hidden = false;
   }
 
-  /* ==================================================================
-     DRAW ENTRY POINT
-     ================================================================== */
   function runDraw() {
     const entries = collectNames();
     if (!entries) return;
@@ -680,9 +627,6 @@
     );
   }
 
-  /* ==================================================================
-     HIDDEN SETUP PANEL — chips
-     ================================================================== */
   function renderChips(count) {
     const build = (container, list, kind) => {
       container.innerHTML = '';
@@ -700,7 +644,6 @@
     build(sepChipsEl, rules.separate, 'separate');
   }
 
-  /* A position may belong to either rule, never both. */
   function toggleRule(kind, pos) {
     const other = kind === 'group' ? 'separate' : 'group';
     const list = rules[kind];
@@ -717,9 +660,6 @@
     renderChips(parseInt(countSelect.value, 10));
   }
 
-  /* ==================================================================
-     SAVED LISTS
-     ================================================================== */
   function refreshRosterList() {
     if (!savedRosters.length) {
       rosterListEl.innerHTML = '<div class="empty-note">No saved lists yet</div>';
@@ -745,6 +685,7 @@
     rosterListEl.querySelectorAll('[data-del]').forEach(b => {
       b.addEventListener('click', () => {
         savedRosters.splice(parseInt(b.dataset.del, 10), 1);
+        persistRosters();
         refreshRosterList();
         toast('List deleted', true);
       });
@@ -763,6 +704,7 @@
                     String(now.getMinutes()).padStart(2, '0');
 
     savedRosters.unshift({ label, names, savedAt });
+    persistRosters();
     refreshRosterList();
     toast('List saved', true);
   }
@@ -770,7 +712,7 @@
   function loadRoster(i) {
     const r = savedRosters[i];
     if (!r) return;
-    const n = Math.max(MIN_PARTICIPANTS, r.names.length);
+    const n = Math.max(MIN_PARTICIPANTS, Math.min(MAX_PARTICIPANTS, r.names.length));
     countSelect.value = String(n);
     renderParticipantInputs(n, r.names);
     resultsEl.hidden = true;
@@ -779,9 +721,27 @@
     toast('List loaded', true);
   }
 
-  /* ==================================================================
-     HIDDEN GESTURE — tap the shuffle icon 5 times
-     ================================================================== */
+  btnImportRoster.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const lines = evt.target.result.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        toast('File is empty');
+        return;
+      }
+      const n = Math.min(MAX_PARTICIPANTS, Math.max(MIN_PARTICIPANTS, lines.length));
+      countSelect.value = String(n);
+      renderParticipantInputs(n, lines);
+      toast('List loaded from file', true);
+    };
+    reader.readAsText(file);
+    fileInput.value = '';
+  });
+
   const iconEl = document.querySelector('.shuffle-icon');
   let tapCount = 0;
   let tapTimer = null;
@@ -809,9 +769,6 @@
     if (e.target === modalBackdrop) closeModal();
   });
 
-  /* ==================================================================
-     EVENT WIRING
-     ================================================================== */
   countSelect.addEventListener('change', () => {
     renderParticipantInputs(parseInt(countSelect.value, 10));
     resultsEl.hidden = true;
@@ -832,9 +789,6 @@
     toast('All rules cleared', true);
   });
 
-  /* ==================================================================
-     BOOT
-     ================================================================== */
   renderParticipantInputs(parseInt(countSelect.value, 10));
   refreshRosterList();
 })();
