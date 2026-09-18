@@ -86,17 +86,6 @@
             align-items: center;
             gap: 3px;
         }
-        .file-btns {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .file-btns button {
-            background-color: #28a745;
-        }
-        .file-btns button:hover {
-            background-color: #218838;
-        }
     </style>
 </head>
 <body>
@@ -128,12 +117,6 @@
         <div class="form-group">
             <label>Must be kept apart (Select members):</label>
             <div id="apartContainer" class="checkbox-grid"></div>
-        </div>
-
-        <div class="file-btns">
-            <button onclick="saveData()">Save List</button>
-            <button onclick="document.getElementById('fileInput').click()">Load File</button>
-            <input type="file" id="fileInput" style="display:none" onchange="loadData(event)">
         </div>
     </div>
 
@@ -252,52 +235,6 @@
             teamDiv.innerHTML = `<strong>Team ${index + 1}:</strong> ${team.sort((a,b) => a-b).join(', ')}`;
             resultsContainer.appendChild(teamDiv);
         });
-    }
-
-    function saveData() {
-        const data = {
-            totalMembers: document.getElementById('totalMembers').value,
-            numTeams: document.getElementById('numTeams').value,
-            together: Array.from(document.querySelectorAll('.together-chk:checked')).map(cb => cb.value),
-            apart: Array.from(document.querySelectorAll('.apart-chk:checked')).map(cb => cb.value)
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'team-shuffler-settings.json';
-        a.click();
-    }
-
-    function loadData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                document.getElementById('totalMembers').value = data.totalMembers || 12;
-                document.getElementById('numTeams').value = data.numTeams || 3;
-                updateCheckboxes();
-
-                if (data.together) {
-                    data.together.forEach(val => {
-                        const cb = document.querySelector(`.together-chk[value="${val}"]`);
-                        if (cb) cb.checked = true;
-                    });
-                }
-                if (data.apart) {
-                    data.apart.forEach(val => {
-                        const cb = document.querySelector(`.apart-chk[value="${val}"]`);
-                        if (cb) cb.checked = true;
-                    });
-                }
-                alert('Settings loaded successfully!');
-            } catch (err) {
-                alert('Error reading file.');
-            }
-        };
-        reader.readAsText(file);
     }
 </script>
 
