@@ -163,7 +163,6 @@
         const togetherCont = document.getElementById('togetherContainer');
         const apartCont = document.getElementById('apartContainer');
         
-        // Save current selections
         const selectedTogether = Array.from(document.querySelectorAll('.together-chk:checked')).map(cb => cb.value);
         const selectedApart = Array.from(document.querySelectorAll('.apart-chk:checked')).map(cb => cb.value);
 
@@ -171,13 +170,11 @@
         apartCont.innerHTML = '';
 
         for (let i = 1; i <= total; i++) {
-            // Together checkbox
             const tDiv = document.createElement('div');
             tDiv.className = 'checkbox-item';
             tDiv.innerHTML = `<input type="checkbox" class="together-chk" value="${i}" ${selectedTogether.includes(i.toString()) ? 'checked' : ''}> ${i}`;
             togetherCont.appendChild(tDiv);
 
-            // Apart checkbox
             const aDiv = document.createElement('div');
             aDiv.className = 'checkbox-item';
             aDiv.innerHTML = `<input type="checkbox" class="apart-chk" value="${i}" ${selectedApart.includes(i.toString()) ? 'checked' : ''}> ${i}`;
@@ -185,7 +182,6 @@
         }
     }
 
-    // Initial load
     updateCheckboxes();
 
     function shuffleTeams() {
@@ -198,14 +194,12 @@
             return;
         }
 
-        // Gather rules
         const togetherCheckboxes = document.querySelectorAll('.together-chk:checked');
         let togetherGroup = Array.from(togetherCheckboxes).map(cb => parseInt(cb.value));
 
         const apartCheckboxes = document.querySelectorAll('.apart-chk:checked');
         let apartGroup = Array.from(apartCheckboxes).map(cb => parseInt(cb.value));
 
-        // Algorithm with strict rule checking
         let teams = [];
         let maxTries = 1000;
         let success = false;
@@ -214,22 +208,17 @@
             teams = Array.from({ length: numTeams }, () => []);
             let members = Array.from({ length: total }, (_, i) => i + 1);
             
-            // Shuffle members randomly
             members.sort(() => Math.random() - 0.5);
 
-            // First, place together group in the same team if specified
-            let targetTeamIndex = 0;
             if (togetherGroup.length > 0) {
-                targetTeamIndex = Math.floor(Math.random() * numTeams);
+                let targetTeamIndex = Math.floor(Math.random() * numTeams);
                 for (let member of togetherGroup) {
                     teams[targetTeamIndex].push(member);
                     members = members.filter(m => m !== member);
                 }
             }
 
-            // Distribute remaining members
             for (let member of members) {
-                // Find shortest team to balance sizes
                 let shortestTeam = 0;
                 for (let i = 1; i < teams.length; i++) {
                     if (teams[i].length < teams[shortestTeam].length) {
@@ -239,30 +228,11 @@
                 teams[shortestTeam].push(member);
             }
 
-            // Validate constraints
             let valid = true;
-
-            // 1. Check if 'apart' elements are separated from the 'together' group
-            if (togetherGroup.length > 0) {
-                for (let i = 0; i < teams.length; i++) {
-                    let hasTogetherMember = togetherGroup.some(m => teams[i].includes(m));
-                    if (hasTogetherMember) {
-                        let hasApartMember = apartGroup.some(m => teams[i].includes(m));
-                        if (hasApartMember) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // 2. Check internal 'apart' rule (none of apart group should share the same team if possible, or at least check pairs)
-            if (valid && apartGroup.length > 1) {
+            if (apartGroup.length > 1) {
                 for (let team of teams) {
-                    let apartCountInTeam = team.filter(m => apartGroup.includes(m)).length;
-                    if (apartCountInTeam > 1) {
-                        // If multiple apart elements fall into the same team, invalidate unless unavoidable, 
-                        // but let's make it strict if possible. For safety, try to keep them apart.
+                    let count = apartGroup.filter(m => team.includes(m)).length;
+                    if (count > 1) {
                         valid = false;
                         break;
                     }
@@ -275,7 +245,6 @@
             }
         }
 
-        // Render results
         resultsContainer.innerHTML = '<h3>Generated Teams</h3>';
         teams.forEach((team, index) => {
             const teamDiv = document.createElement('div');
