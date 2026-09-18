@@ -1,242 +1,843 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Shuffler</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #007bff;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .results {
-            margin-top: 20px;
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .team {
-            margin-bottom: 10px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 4px;
-            border-left: 5px solid #007bff;
-        }
-        #secretMenu {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            border: 2px dashed #007bff;
-            border-radius: 4px;
-            background: #f8f9fa;
-        }
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 5px;
-            margin-top: 5px;
-        }
-        .checkbox-item {
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Team Shuffler">
+<meta name="application-name" content="Team Shuffler">
+<title>Team Shuffler</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg-0: #0b1120; --bg-1: #131c33;
+    --card: #1a2440; --card-2: #212d4d;
+    --stroke: #2f3d64;
+    --text: #eef2ff; --text-dim: #9aa8cc;
+    --accent: #f97316; --accent-2: #fb923c;
+    --lane: #22d3ee;
+    --danger: #ef4444;
+    --ok: #34d399;
+    --radius: 16px;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1e2a4d 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100dvh;
+    padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px
+             calc(env(safe-area-inset-bottom, 0px) + 40px);
+    display: flex; justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { width: 100%; max-width: 560px; }
+
+  /* ============ HEADER ============ */
+  header { text-align: center; margin-bottom: 22px; }
+
+  /* Shuffle icon: three arrows in a circular motion */
+  .shuffle-icon {
+    width: 56px; height: 56px; margin: 0 auto 12px;
+    display: grid; place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #24325a, #131c33);
+    border: 1px solid var(--stroke);
+    box-shadow: 0 8px 22px rgba(0,0,0,.4);
+  }
+
+  .shuffle-icon svg {
+    width: 30px; height: 30px;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.4px; }
+  header p { color: var(--text-dim); font-size: .85rem; margin-top: 6px; }
+
+  /* ============ PANELS ============ */
+  .panel {
+    background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+    border: 1px solid var(--stroke); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px;
+  }
+  .panel-title {
+    font-size: .78rem; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--text-dim); font-weight: 700; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--stroke), transparent);
+  }
+
+  /* ============ FORM CONTROLS ============ */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block; font-size: .82rem; font-weight: 600;
+    color: var(--text-dim); margin-bottom: 7px;
+  }
+  select, input[type="text"] {
+    width: 100%; font-size: 1rem; font-family: inherit; color: var(--text);
+    background: #0e1730; border: 1px solid var(--stroke);
+    border-radius: 12px; padding: 13px 14px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none; appearance: none;
+  }
+  select {
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+      linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position: calc(100% - 20px) calc(50% + 1px), calc(100% - 14px) calc(50% + 1px);
+    background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+    padding-right: 40px;
+  }
+  select:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+  }
+  input[type="text"]::placeholder { color: #4f5f88; }
+
+  /* ============ PARTICIPANT ROWS ============ */
+  #participantList { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .p-row {
+    display: flex; align-items: center; gap: 10px;
+    animation: slideIn .28s cubic-bezier(.2,.9,.3,1) both;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .p-index {
+    flex: 0 0 30px; height: 30px; border-radius: 9px; display: grid;
+    place-items: center; font-size: .78rem; font-weight: 800;
+    color: #0b1120; background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    box-shadow: 0 3px 10px rgba(249,115,22,.3);
+  }
+  .p-row input { flex: 1; }
+
+  /* ============ BUTTONS ============ */
+  .btn-generate {
+    width: 100%; border: none; border-radius: 14px; padding: 17px;
+    font-family: inherit; font-size: 1.06rem; font-weight: 800;
+    letter-spacing: .3px; color: #1a1206;
+    background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 100%);
+    box-shadow: 0 8px 22px rgba(249,115,22,.32); cursor: pointer;
+    transition: transform .1s, box-shadow .15s, filter .15s; margin-top: 4px;
+  }
+  .btn-generate:active { transform: scale(.975); box-shadow: 0 4px 12px rgba(249,115,22,.25); }
+  .btn-generate:disabled { filter: grayscale(.75) brightness(.7); box-shadow: none; cursor: not-allowed; }
+
+  .btn-secondary {
+    width: 100%; border: 1px solid var(--stroke); border-radius: 12px; padding: 13px;
+    font-family: inherit; font-size: .92rem; font-weight: 700;
+    color: var(--text); background: rgba(255,255,255,.04);
+    cursor: pointer; transition: background .15s, transform .1s; margin-top: 10px;
+  }
+  .btn-secondary:active { transform: scale(.98); background: rgba(255,255,255,.09); }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn-secondary { margin-top: 0; }
+
+  /* ============ RESULTS ============ */
+  #results { margin-top: 22px; }
+  .results-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .results-head h2 { font-size: 1.06rem; font-weight: 800; }
+  .draw-stamp { font-size: .7rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+  .team-card {
+    background: linear-gradient(180deg, #1e2a4a 0%, #18213c 100%);
+    border: 1px solid var(--stroke); border-radius: var(--radius);
+    padding: 14px 14px 8px; margin-bottom: 14px; box-shadow: var(--shadow);
+    animation: cardIn .4s cubic-bezier(.2,.9,.3,1) both;
+    position: relative; overflow: hidden;
+  }
+  .team-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--lane), transparent 85%); opacity: .55;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+
+  .team-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 10px; margin-bottom: 8px;
+    border-bottom: 1px dashed rgba(47,61,100,.8);
+  }
+  .team-name { font-weight: 800; font-size: .98rem; display: flex; align-items: center; gap: 9px; }
+  .team-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 10px currentColor; background: currentColor; }
+  .team-count {
+    font-size: .72rem; color: var(--text-dim); background: rgba(255,255,255,.05);
+    border: 1px solid var(--stroke); padding: 3px 10px; border-radius: 999px; font-weight: 700;
+  }
+  ol.members { list-style: none; counter-reset: m; padding-bottom: 6px; }
+  ol.members li {
+    counter-increment: m; display: flex; align-items: center; gap: 11px;
+    padding: 9px 2px; font-size: .95rem; border-bottom: 1px solid rgba(47,61,100,.35);
+  }
+  ol.members li:last-child { border-bottom: none; }
+  ol.members li::before {
+    content: counter(m); flex: 0 0 24px; height: 24px; border-radius: 7px;
+    display: grid; place-items: center; font-size: .7rem; font-weight: 800;
+    color: var(--text-dim); background: #0e1730; border: 1px solid var(--stroke);
+  }
+  .m-name { flex: 1; }
+
+  /* ============ MODAL (HIDDEN SETUP) ============ */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(5,8,18,.82);
+    backdrop-filter: blur(4px); z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .modal {
+    width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto;
+    background: linear-gradient(180deg, #1c2748 0%, #151d35 100%);
+    border: 1px solid var(--stroke); border-bottom: none;
+    border-radius: 22px 22px 0 0;
+    padding: 20px 18px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    transform: translateY(100%); transition: transform .28s cubic-bezier(.2,.9,.3,1);
+    box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  }
+  .modal-backdrop.open .modal { transform: translateY(0); }
+
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .modal-head h2 { font-size: 1.05rem; font-weight: 800; }
+  .modal-close {
+    width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--stroke);
+    background: rgba(255,255,255,.05); color: var(--text-dim);
+    font-size: 1.2rem; line-height: 1; cursor: pointer; display: grid; place-items: center;
+  }
+
+  .section-label {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: 1.3px;
+    color: var(--text-dim); font-weight: 700; margin: 20px 0 10px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  .hint {
+    font-size: .74rem; color: #6b7aa1; line-height: 1.45; margin-bottom: 12px;
+  }
+
+  /* Position chip grid */
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    min-width: 42px; padding: 10px 12px; border-radius: 11px;
+    border: 1px solid var(--stroke); background: #0e1730; color: var(--text-dim);
+    font-family: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
+    transition: all .15s; text-align: center;
+  }
+  .chip:active { transform: scale(.94); }
+  .chip.on {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #1a1206; border-color: transparent;
+    box-shadow: 0 4px 12px rgba(249,115,22,.3);
+  }
+
+  .chip-group .chip.on { background: linear-gradient(180deg, #22d3ee, #0891b2); color: #04222b; box-shadow: 0 4px 12px rgba(34,211,238,.25); }
+  .chip-sep .chip.on { background: linear-gradient(180deg, #f87171, #dc2626); color: #2a0808; box-shadow: 0 4px 12px rgba(239,68,68,.25); }
+
+  /* Saved rosters */
+  .roster-item {
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px;
+    background: #0e1730; border: 1px solid var(--stroke); border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .roster-item .r-info { flex: 1; min-width: 0; }
+  .roster-item .r-name { font-size: .9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .roster-item .r-meta { font-size: .7rem; color: var(--text-dim); margin-top: 2px; }
+  .r-btn {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
+    border: 1px solid var(--stroke); background: rgba(255,255,255,.04);
+    color: var(--text-dim); font-size: .9rem; cursor: pointer; display: grid; place-items: center;
+  }
+  .r-btn.load { color: var(--ok); border-color: rgba(52,211,153,.35); }
+  .r-btn.del { color: var(--danger); border-color: rgba(239,68,68,.3); }
+
+  .empty-note {
+    font-size: .8rem; color: #5a688f; text-align: center;
+    padding: 16px; border: 1px dashed var(--stroke); border-radius: 12px;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+    transform: translate(-50%, 140%); background: #b91c1c; color: #fff;
+    font-size: .84rem; font-weight: 600; padding: 12px 20px; border-radius: 999px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.5);
+    transition: transform .3s cubic-bezier(.2,.9,.3,1);
+    z-index: 300; max-width: 90vw; text-align: center;
+  }
+  #toast.show { transform: translate(-50%, 0); }
+  #toast.good { background: #15803d; }
+
+  .footnote { text-align: center; color: #55648c; font-size: .7rem; margin-top: 10px; letter-spacing: .3px; }
+</style>
 </head>
 <body>
+<div class="app">
 
-<div class="container">
-    <h1 id="titleClick">Team Shuffler</h1>
-    
-    <div class="form-group">
-        <label for="totalMembers">Total Members:</label>
-        <input type="number" id="totalMembers" value="12" min="1">
+  <header>
+    <div class="shuffle-icon" aria-hidden="true">
+      <!-- Shuffle arrows icon -->
+      <svg viewBox="0 0 24 24">
+        <path d="M16 3h5v5" />
+        <path d="M4 20 21 3" />
+        <path d="M21 16v5h-5" />
+        <path d="M15 15l6 6" />
+        <path d="M4 4l5 5" />
+      </svg>
     </div>
+    <h1>Team Shuffler</h1>
+    <p>Enter the names and let the draw decide</p>
+  </header>
 
-    <div class="form-group">
-        <label for="numTeams">Number of Teams:</label>
-        <input type="number" id="numTeams" value="3" min="1">
+  <!-- STEP 1 -->
+  <section class="panel">
+    <div class="panel-title">1 · Participants</div>
+    <div class="field">
+      <label for="participantCount">Number of participants</label>
+      <select id="participantCount"><!-- filled by JS --></select>
     </div>
-
-    <button onclick="shuffleTeams()">Shuffle Teams</button>
-
-    <!-- Secret Advanced Settings -->
-    <div id="secretMenu">
-        <h3>Advanced Rules</h3>
-        
-        <div class="form-group">
-            <label>Must stay together (Select members):</label>
-            <div id="togetherContainer" class="checkbox-grid"></div>
-        </div>
-
-        <div class="form-group">
-            <label>Must be kept apart (Select members):</label>
-            <div id="apartContainer" class="checkbox-grid"></div>
-        </div>
+    <div class="field">
+      <label for="teamCount">Number of teams</label>
+      <select id="teamCount">
+        <option value="2">2 teams</option>
+        <option value="3">3 teams</option>
+        <option value="4">4 teams</option>
+      </select>
     </div>
+  </section>
 
-    <div class="results" id="resultsContainer">
-        <h3>Results will appear here</h3>
+  <!-- STEP 2 -->
+  <section class="panel">
+    <div class="panel-title">2 · Names</div>
+    <div id="participantList"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn-secondary" id="btnSaveRoster" type="button">Save this list</button>
     </div>
+  </section>
+
+  <button class="btn-generate" id="btnGenerate" type="button">Generate Teams</button>
+
+  <section id="results" hidden aria-live="polite"></section>
+
+  <p class="footnote">Good luck with the game!</p>
 </div>
 
-<script>
-    let clickCount = 0;
-    const titleClick = document.getElementById('titleClick');
-    const secretMenu = document.getElementById('secretMenu');
+<!-- ===================== HIDDEN SETUP MODAL ===================== -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Draw setup">
+    <div class="modal-head">
+      <h2>Draw setup</h2>
+      <button class="modal-close" id="modalClose" type="button" aria-label="Close">✕</button>
+    </div>
 
-    titleClick.addEventListener('click', () => {
-        clickCount++;
-        if (clickCount >= 5) {
-            secretMenu.style.display = secretMenu.style.display === 'block' ? 'none' : 'block';
-            clickCount = 0;
-            updateCheckboxes();
+    <p class="hint">
+      Tap the position numbers to build rules. Both blocks are optional —
+      leave them empty for a fully random draw.
+    </p>
+
+    <div class="section-label">Must stay together</div>
+    <p class="hint">Selected positions will always land in the same team.</p>
+    <div class="chip-grid chip-group" id="groupChips"></div>
+
+    <div class="section-label">Must be kept apart</div>
+    <p class="hint">Selected positions will never share a team.</p>
+    <div class="chip-grid chip-sep" id="sepChips"></div>
+
+    <div class="section-label">Saved lists</div>
+    <div id="rosterList"></div>
+
+    <div class="section-label">Reset</div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="btnClearRules" type="button">Clear all rules</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ==================================================================
+   TEAM SHUFFLER
+   ------------------------------------------------------------------
+   Public:
+     • Pick participant count and team count.
+     • Type names, optionally save/load a list.
+     • "Generate Teams" produces a balanced, shuffled result.
+
+   Hidden setup panel (admin sheet):
+     • Open by tapping the shuffle icon 5 times quickly.
+     • "Must stay together" — chosen positions always share a team.
+     • "Must be kept apart" — chosen positions never share a team.
+     • Either rule may be used alone, both together, or neither.
+     • Rules live in memory only; nothing is shown on the main screen.
+   ================================================================== */
+
+(function () {
+  'use strict';
+
+  /* ---------- DOM ---------- */
+  const $ = id => document.getElementById(id);
+  const countSelect = $('participantCount');
+  const teamSelect  = $('teamCount');
+  const listEl      = $('participantList');
+  const btnGenerate = $('btnGenerate');
+  const resultsEl   = $('results');
+  const toastEl     = $('toast');
+
+  const modalBackdrop = $('modalBackdrop');
+  const modalClose    = $('modalClose');
+  const groupChipsEl  = $('groupChips');
+  const sepChipsEl    = $('sepChips');
+  const rosterListEl  = $('rosterList');
+  const btnSaveRoster = $('btnSaveRoster');
+  const btnClearRules = $('btnClearRules');
+
+  /* ---------- Config ---------- */
+  const MIN_PARTICIPANTS = 4;
+  const MAX_PARTICIPANTS = 16;
+  const TEAM_COLORS = ['#22d3ee', '#f97316', '#a78bfa', '#34d399', '#f472b6', '#facc15'];
+  const TEAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+  /* ---------- Hidden rules state ----------
+     Stored only in memory. Empty arrays = completely random draw.
+     `group`   : positions forced into one team
+     `separate`: positions forced into different teams          */
+  const rules = {
+    group: [],
+    separate: []
+  };
+
+  /* ---------- Saved rosters (in-memory) ----------
+     Browser storage is unavailable in the preview sandbox, so lists
+     persist for the current session only. In a packaged app these
+     calls can be swapped for localStorage with one line.         */
+  const savedRosters = [];
+
+  /* ==================================================================
+     UTILITIES
+     ================================================================== */
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let toastTimer = null;
+  function toast(msg, good) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('good', !!good);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+  }
+
+  function esc(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  /* ==================================================================
+     COUNT DROPDOWN
+     ================================================================== */
+  for (let n = MIN_PARTICIPANTS; n <= MAX_PARTICIPANTS; n++) {
+    const opt = document.createElement('option');
+    opt.value = String(n);
+    opt.textContent = n + ' participants';
+    countSelect.appendChild(opt);
+  }
+  countSelect.value = '8';
+
+  /* ==================================================================
+     PARTICIPANT INPUT ROWS
+     ================================================================== */
+  function renderParticipantInputs(count, presetValues) {
+    const previous = presetValues || Array.from(
+      listEl.querySelectorAll('input[type="text"]')
+    ).map(inp => inp.value);
+
+    listEl.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+      const row = document.createElement('div');
+      row.className = 'p-row';
+      row.style.animationDelay = Math.min(i * 18, 260) + 'ms';
+
+      const badge = document.createElement('span');
+      badge.className = 'p-index';
+      badge.textContent = String(i);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.autocomplete = 'off';
+      input.autocapitalize = 'words';
+      input.spellcheck = false;
+      input.placeholder = 'Player ' + i;
+      input.setAttribute('aria-label', 'Player ' + i);
+      input.value = previous[i - 1] || '';
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); runDraw(); }
+      });
+
+      row.appendChild(badge);
+      row.appendChild(input);
+      listEl.appendChild(row);
+    }
+
+    /* Rules may reference positions that no longer exist. */
+    pruneRules(count);
+    renderChips(count);
+  }
+
+  /* Drop out-of-range positions after the count changes. */
+  function pruneRules(count) {
+    rules.group    = rules.group.filter(p => p <= count);
+    rules.separate = rules.separate.filter(p => p <= count);
+  }
+
+  /* ==================================================================
+     NAMES
+     ================================================================== */
+  function collectNames() {
+    const inputs = Array.from(listEl.querySelectorAll('input[type="text"]'));
+    const entries = inputs.map((inp, i) => ({ index: i + 1, name: inp.value.trim() }));
+
+    const missing = entries.filter(e => e.name === '');
+    if (missing.length) {
+      toast('Please fill in all ' + inputs.length + ' names');
+      const target = inputs[missing[0].index - 1];
+      if (target) target.focus();
+      return null;
+    }
+
+    const seen = new Map();
+    for (const e of entries) {
+      const key = e.name.toLowerCase().replace(/\s+/g, ' ');
+      if (seen.has(key)) { toast('"' + e.name + '" appears more than once'); return null; }
+      seen.set(key, true);
+    }
+    return entries;
+  }
+
+  /* ==================================================================
+     DRAW ENGINE
+     ------------------------------------------------------------------
+     Phase A : place "group" positions into one team
+     Phase B : place "separate" positions into distinct teams
+     Phase C : fill everyone else, balancing team sizes to ±1
+     Phase D : shuffle inside each team and shuffle card order
+     ================================================================== */
+  function buildTeams(entries, teamCount) {
+    const nTeams = Math.min(teamCount, entries.length);
+    const buckets = Array.from({ length: nTeams }, () => []);
+    const byIndex = new Map(entries.map(e => [e.index, e]));
+
+    const placed = new Set();
+
+    /* ---------- Phase A: the "stay together" group ----------
+       All group positions share one randomly chosen team, so the
+       target team is not predictable from run to run.            */
+    const groupEntries = rules.group
+      .map(p => byIndex.get(p))
+      .filter(Boolean);
+
+    if (groupEntries.length) {
+      const groupTeam = Math.floor(Math.random() * nTeams);
+      for (const e of groupEntries) {
+        buckets[groupTeam].push(e);
+        placed.add(e.index);
+      }
+    }
+
+    /* ---------- Phase B: the "keep apart" positions ----------
+       Each goes to a distinct team. If there are more of them than
+       teams, the extras fall back to the least-loaded team rather
+       than failing the draw.                                     */
+    const sepEntries = rules.separate
+      .map(p => byIndex.get(p))
+      .filter(Boolean)
+      .filter(e => !placed.has(e.index));
+
+    if (sepEntries.length) {
+      const teamOrder = shuffle(buckets.map((_, i) => i));
+      let cursor = 0;
+
+      for (const e of sepEntries) {
+        let target;
+        if (cursor < teamOrder.length) {
+          target = teamOrder[cursor++];
+        } else {
+          const sizes = buckets.map(b => b.length);
+          const min = Math.min(...sizes);
+          target = shuffle(buckets.map((_, i) => i).filter(i => sizes[i] === min))[0];
         }
+        buckets[target].push(e);
+        placed.add(e.index);
+      }
+    }
+
+    /* ---------- Phase C: everyone else, balanced ---------- */
+    const pool = shuffle(entries.filter(e => !placed.has(e.index)));
+
+    const base = Math.floor(entries.length / nTeams);
+    const leftover = entries.length % nTeams;
+    const extraTeams = new Set(
+      shuffle(buckets.map((_, i) => i)).slice(0, leftover)
+    );
+    const targetSize = buckets.map((_, i) => base + (extraTeams.has(i) ? 1 : 0));
+
+    /* Top up teams that are under target, in random order. */
+    for (const t of shuffle(buckets.map((_, i) => i))) {
+      while (buckets[t].length < targetSize[t] && pool.length) {
+        buckets[t].push(pool.pop());
+      }
+    }
+
+    /* Any surplus lands on the currently smallest team. */
+    while (pool.length) {
+      const sizes = buckets.map(b => b.length);
+      const min = Math.min(...sizes);
+      const candidates = shuffle(buckets.map((_, i) => i).filter(i => sizes[i] === min));
+      buckets[candidates[0]].push(pool.pop());
+    }
+
+    /* ---------- Phase D: scramble visible order ---------- */
+    for (const b of buckets) shuffle(b);
+
+    return buckets;
+  }
+
+  /* ==================================================================
+     RENDER RESULTS
+     ================================================================== */
+  function renderResults(buckets) {
+    const cardOrder = shuffle(buckets.map((_, i) => i));
+    const now = new Date();
+    const stamp = String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0');
+
+    let html = '<div class="results-head"><h2>Draw result</h2>' +
+               '<span class="draw-stamp">' + stamp + '</span></div>';
+
+    cardOrder.forEach((bucketIdx, visualPos) => {
+      const members = buckets[bucketIdx];
+      const color = TEAM_COLORS[bucketIdx % TEAM_COLORS.length];
+
+      html += '<article class="team-card" style="animation-delay:' + (visualPos * 70) + 'ms">';
+      html += '  <div class="team-head">';
+      html += '    <span class="team-name"><span class="team-dot" style="color:' + color + '"></span>Team ' + TEAM_LETTERS[visualPos] + '</span>';
+      html += '    <span class="team-count">' + members.length + (members.length === 1 ? ' player' : ' players') + '</span>';
+      html += '  </div>';
+      html += '  <ol class="members">';
+      for (const m of members) {
+        html += '<li><span class="m-name">' + esc(m.name) + '</span></li>';
+      }
+      html += '  </ol></article>';
     });
 
-    document.getElementById('totalMembers').addEventListener('input', updateCheckboxes);
+    resultsEl.innerHTML = html;
+    resultsEl.hidden = false;
+  }
 
-    function updateCheckboxes() {
-        const total = parseInt(document.getElementById('totalMembers').value) || 0;
-        const togetherCont = document.getElementById('togetherContainer');
-        const apartCont = document.getElementById('apartContainer');
-        
-        const selectedTogether = Array.from(document.querySelectorAll('.together-chk:checked')).map(cb => cb.value);
-        const selectedApart = Array.from(document.querySelectorAll('.apart-chk:checked')).map(cb => cb.value);
+  /* ==================================================================
+     DRAW ENTRY POINT
+     ================================================================== */
+  function runDraw() {
+    const entries = collectNames();
+    if (!entries) return;
 
-        togetherCont.innerHTML = '';
-        apartCont.innerHTML = '';
-
-        for (let i = 1; i <= total; i++) {
-            const tDiv = document.createElement('div');
-            tDiv.className = 'checkbox-item';
-            tDiv.innerHTML = `<input type="checkbox" class="together-chk" value="${i}" ${selectedTogether.includes(i.toString()) ? 'checked' : ''}> ${i}`;
-            togetherCont.appendChild(tDiv);
-
-            const aDiv = document.createElement('div');
-            aDiv.className = 'checkbox-item';
-            aDiv.innerHTML = `<input type="checkbox" class="apart-chk" value="${i}" ${selectedApart.includes(i.toString()) ? 'checked' : ''}> ${i}`;
-            apartCont.appendChild(aDiv);
-        }
+    const teamCount = parseInt(teamSelect.value, 10);
+    if (teamCount > entries.length) {
+      toast('Too many teams for ' + entries.length + ' participants');
+      return;
     }
 
-    updateCheckboxes();
+    renderResults(buildTeams(entries, teamCount));
 
-    function shuffleTeams() {
-        const total = parseInt(document.getElementById('totalMembers').value);
-        const numTeams = parseInt(document.getElementById('numTeams').value);
-        const resultsContainer = document.getElementById('resultsContainer');
+    requestAnimationFrame(() =>
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    );
+  }
 
-        if (numTeams > total || numTeams < 1) {
-            alert('Invalid number of teams or members.');
-            return;
-        }
+  /* ==================================================================
+     HIDDEN SETUP PANEL — chips
+     ================================================================== */
+  function renderChips(count) {
+    const build = (container, list, kind) => {
+      container.innerHTML = '';
+      for (let i = 1; i <= count; i++) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip' + (list.includes(i) ? ' on' : '');
+        chip.textContent = String(i);
+        chip.setAttribute('aria-pressed', list.includes(i) ? 'true' : 'false');
+        chip.addEventListener('click', () => toggleRule(kind, i));
+        container.appendChild(chip);
+      }
+    };
+    build(groupChipsEl, rules.group, 'group');
+    build(sepChipsEl, rules.separate, 'separate');
+  }
 
-        const togetherCheckboxes = document.querySelectorAll('.together-chk:checked');
-        let togetherGroup = Array.from(togetherCheckboxes).map(cb => parseInt(cb.value));
+  /* A position may belong to either rule, never both. */
+  function toggleRule(kind, pos) {
+    const other = kind === 'group' ? 'separate' : 'group';
+    const list = rules[kind];
 
-        const apartCheckboxes = document.querySelectorAll('.apart-chk:checked');
-        let apartGroup = Array.from(apartCheckboxes).map(cb => parseInt(cb.value));
-
-        let teams = [];
-        let maxTries = 1000;
-        let success = false;
-
-        for (let t = 0; t < maxTries; t++) {
-            teams = Array.from({ length: numTeams }, () => []);
-            let members = Array.from({ length: total }, (_, i) => i + 1);
-            
-            members.sort(() => Math.random() - 0.5);
-
-            if (togetherGroup.length > 0) {
-                let targetTeamIndex = Math.floor(Math.random() * numTeams);
-                for (let member of togetherGroup) {
-                    teams[targetTeamIndex].push(member);
-                    members = members.filter(m => m !== member);
-                }
-            }
-
-            for (let member of members) {
-                let shortestTeam = 0;
-                for (let i = 1; i < teams.length; i++) {
-                    if (teams[i].length < teams[shortestTeam].length) {
-                        shortestTeam = i;
-                    }
-                }
-                teams[shortestTeam].push(member);
-            }
-
-            let valid = true;
-            if (apartGroup.length > 1) {
-                for (let team of teams) {
-                    let count = apartGroup.filter(m => team.includes(m)).length;
-                    if (count > 1) {
-                        valid = false;
-                        break;
-                    }
-                }
-            }
-
-            if (valid) {
-                success = true;
-                break;
-            }
-        }
-
-        resultsContainer.innerHTML = '<h3>Generated Teams</h3>';
-        teams.forEach((team, index) => {
-            const teamDiv = document.createElement('div');
-            teamDiv.className = 'team';
-            teamDiv.innerHTML = `<strong>Team ${index + 1}:</strong> ${team.sort((a,b) => a-b).join(', ')}`;
-            resultsContainer.appendChild(teamDiv);
-        });
+    const at = list.indexOf(pos);
+    if (at >= 0) {
+      list.splice(at, 1);
+    } else {
+      const otherAt = rules[other].indexOf(pos);
+      if (otherAt >= 0) rules[other].splice(otherAt, 1);
+      list.push(pos);
+      list.sort((a, b) => a - b);
     }
+    renderChips(parseInt(countSelect.value, 10));
+  }
+
+  /* ==================================================================
+     SAVED LISTS
+     ================================================================== */
+  function refreshRosterList() {
+    if (!savedRosters.length) {
+      rosterListEl.innerHTML = '<div class="empty-note">No saved lists yet</div>';
+      return;
+    }
+
+    let html = '';
+    savedRosters.forEach((r, i) => {
+      html += '<div class="roster-item">';
+      html += '  <div class="r-info">';
+      html += '    <div class="r-name">' + esc(r.label) + '</div>';
+      html += '    <div class="r-meta">' + r.names.length + ' names · ' + esc(r.savedAt) + '</div>';
+      html += '  </div>';
+      html += '  <button class="r-btn load" data-load="' + i + '" aria-label="Load list">▶</button>';
+      html += '  <button class="r-btn del" data-del="' + i + '" aria-label="Delete list">✕</button>';
+      html += '</div>';
+    });
+    rosterListEl.innerHTML = html;
+
+    rosterListEl.querySelectorAll('[data-load]').forEach(b => {
+      b.addEventListener('click', () => loadRoster(parseInt(b.dataset.load, 10)));
+    });
+    rosterListEl.querySelectorAll('[data-del]').forEach(b => {
+      b.addEventListener('click', () => {
+        savedRosters.splice(parseInt(b.dataset.del, 10), 1);
+        refreshRosterList();
+        toast('List deleted', true);
+      });
+    });
+  }
+
+  function saveRoster() {
+    const inputs = Array.from(listEl.querySelectorAll('input[type="text"]'));
+    const names = inputs.map(i => i.value.trim());
+    if (names.every(n => n === '')) { toast('Nothing to save yet'); return; }
+
+    const first = names.find(n => n !== '') || 'Untitled';
+    const label = first.split(' ')[0] + "'s list";
+    const now = new Date();
+    const savedAt = String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0');
+
+    savedRosters.unshift({ label, names, savedAt });
+    refreshRosterList();
+    toast('List saved', true);
+  }
+
+  function loadRoster(i) {
+    const r = savedRosters[i];
+    if (!r) return;
+    const n = Math.max(MIN_PARTICIPANTS, r.names.length);
+    countSelect.value = String(n);
+    renderParticipantInputs(n, r.names);
+    resultsEl.hidden = true;
+    resultsEl.innerHTML = '';
+    closeModal();
+    toast('List loaded', true);
+  }
+
+  /* ==================================================================
+     HIDDEN GESTURE — tap the shuffle icon 5 times
+     ================================================================== */
+  const iconEl = document.querySelector('.shuffle-icon');
+  let tapCount = 0;
+  let tapTimer = null;
+
+  iconEl.addEventListener('click', () => {
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { tapCount = 0; }, 900);
+
+    if (tapCount >= 5) {
+      tapCount = 0;
+      openModal();
+    }
+  });
+
+  function openModal() {
+    renderChips(parseInt(countSelect.value, 10));
+    refreshRosterList();
+    modalBackdrop.classList.add('open');
+  }
+  function closeModal() { modalBackdrop.classList.remove('open'); }
+
+  modalClose.addEventListener('click', closeModal);
+  modalBackdrop.addEventListener('click', e => {
+    if (e.target === modalBackdrop) closeModal();
+  });
+
+  /* ==================================================================
+     EVENT WIRING
+     ================================================================== */
+  countSelect.addEventListener('change', () => {
+    renderParticipantInputs(parseInt(countSelect.value, 10));
+    resultsEl.hidden = true;
+    resultsEl.innerHTML = '';
+  });
+
+  teamSelect.addEventListener('change', () => {
+    if (!resultsEl.hidden) runDraw();
+  });
+
+  btnGenerate.addEventListener('click', runDraw);
+  btnSaveRoster.addEventListener('click', saveRoster);
+
+  btnClearRules.addEventListener('click', () => {
+    rules.group = [];
+    rules.separate = [];
+    renderChips(parseInt(countSelect.value, 10));
+    toast('All rules cleared', true);
+  });
+
+  /* ==================================================================
+     BOOT
+     ================================================================== */
+  renderParticipantInputs(parseInt(countSelect.value, 10));
+  refreshRosterList();
+})();
 </script>
-
 </body>
 </html>
