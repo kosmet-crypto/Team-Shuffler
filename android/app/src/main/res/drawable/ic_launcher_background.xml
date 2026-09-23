@@ -1,20 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Diagonal split: orange team on the left, blue team on the right. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M0,0h108v108h-108z">
+    <path android:pathData="M0,0H66L42,108H0Z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"
                 android:startX="0" android:startY="0"
-                android:endX="108" android:endY="108">
-                <item android:offset="0" android:color="#FFFFB25C" />
-                <item android:offset="0.55" android:color="#FFF97316" />
-                <item android:offset="1" android:color="#FFC2410C" />
+                android:endX="0" android:endY="108">
+                <item android:offset="0" android:color="#FFFDBA74" />
+                <item android:offset="1" android:color="#FFEA580C" />
             </gradient>
         </aapt:attr>
     </path>
+    <path android:pathData="M66,0H108V108H42Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="0" android:endY="108">
+                <item android:offset="0" android:color="#FF67E8F9" />
+                <item android:offset="1" android:color="#FF2563EB" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:strokeColor="#590B1120" android:strokeWidth="2.5" android:pathData="M66,0L42,108" />
 </vector>
