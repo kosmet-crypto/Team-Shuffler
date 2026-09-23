@@ -1,0 +1,6 @@
+.gradle/
+build/
+app/build/
+local.properties
+# Copied from the repo root at build time (see copyWebApp in app/build.gradle)
+app/src/main/assets/
