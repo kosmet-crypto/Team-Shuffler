@@ -281,6 +281,15 @@
   #toast.good { background: #15803d; }
 
   .footnote { text-align: center; color: #55648c; font-size: .7rem; margin-top: 10px; letter-spacing: .3px; }
+
+  .updates { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 18px; }
+  .btn-link {
+    border: 1px solid var(--stroke); border-radius: 999px; padding: 9px 16px;
+    font-family: inherit; font-size: .78rem; font-weight: 700; color: var(--text-dim);
+    background: rgba(255,255,255,.04); cursor: pointer; transition: background .15s, transform .1s;
+  }
+  .btn-link:active { transform: scale(.97); background: rgba(255,255,255,.09); }
+  .app-version { font-size: .66rem; color: #55648c; }
 </style>
 </head>
 <body>
@@ -325,6 +334,11 @@
   <section id="results" hidden aria-live="polite"></section>
 
   <p class="footnote">Good luck with the game!</p>
+
+  <div class="updates">
+    <button class="btn-link" id="btnCheckUpdate" type="button">Check for updates</button>
+    <span class="app-version" id="appVersion"></span>
+  </div>
 </div>
 
 <!-- ===================== HIDDEN SETUP MODAL ===================== -->
@@ -799,12 +813,39 @@
     toast('All rules cleared', true);
   });
 
+  // Updates. Android app: the native side asks GitHub Releases and shows the result itself.
+  // Web/PWA: compare the page the service worker cached with the one on the server.
+  const android = window.ShufflerAndroid;
+  const version = android && android.getVersion ? android.getVersion() : '';
+  $('appVersion').textContent = version ? 'Version ' + version : 'Web app';
+
+  async function checkForUpdate() {
+    if (android && android.checkForUpdate) { android.checkForUpdate(); return; }
+    toast('Checking for updates…', true);
+    try {
+      // Unique URL + no-store so neither the service worker nor the HTTP cache answers.
+      const res = await fetch('index.html?check=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.status);
+      const fresh = await res.text();
+      const cached = window.caches ? await caches.match('./index.html') : null;
+      const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+      if (reg) reg.update().catch(() => {});
+      if (cached && (await cached.text()) !== fresh) {
+        toast('New version found. Updating…', true);
+        setTimeout(() => location.reload(), 900);
+      } else toast('You have the latest version', true);
+    } catch (err) {
+      toast('Could not check. Are you online?');
+    }
+  }
+  $('btnCheckUpdate').addEventListener('click', checkForUpdate);
+
   renderParticipantInputs(parseInt(countSelect.value, 10));
   refreshRosterList();
 })();
 
 // Offline support for the installed web app. The Android app bundles the page itself.
-if ('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net' &&
+if ('serviceWorker' in navigator && !window.ShufflerAndroid &&
     location.protocol !== 'file:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
