@@ -3,12 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0b1120">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Team Shuffler">
 <meta name="application-name" content="Team Shuffler">
 <title>Team Shuffler</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -55,14 +59,7 @@
     box-shadow: 0 8px 22px rgba(0,0,0,.4);
   }
 
-  .shuffle-icon svg {
-    width: 30px; height: 30px;
-    stroke: var(--accent);
-    stroke-width: 2.2;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
+  .shuffle-icon svg { width: 40px; height: 40px; }
 
   h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.4px; }
   header p { color: var(--text-dim); font-size: .85rem; margin-top: 6px; }
@@ -273,7 +270,7 @@
 
   #toast {
     position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
-    transform: translate(-50%, 140%); background: #b91c1c; color: #fff;
+    transform: translate(-50%, calc(100% + 80px)); background: #b91c1c; color: #fff;
     font-size: .84rem; font-weight: 600; padding: 12px 20px; border-radius: 999px;
     box-shadow: 0 10px 26px rgba(0,0,0,.5);
     transition: transform .3s cubic-bezier(.2,.9,.3,1);
@@ -290,13 +287,7 @@
 
   <header>
     <div class="shuffle-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24">
-        <path d="M16 3h5v5" />
-        <path d="M4 20 21 3" />
-        <path d="M21 16v5h-5" />
-        <path d="M15 15l6 6" />
-        <path d="M4 4l5 5" />
-      </svg>
+      <svg viewBox="21 21 66 66"><g transform="rotate(16 65 43)"><path d="M58.2,31.4h16a6,6 0,0 1,6,6v16a6,6 0,0 1,-6,6h-16a6,6 0,0 1,-6,-6v-16a6,6 0,0 1,6,-6z" fill="#000" fill-opacity=".22"/><path d="M57,29h16a6,6 0,0 1,6,6v16a6,6 0,0 1,-6,6h-16a6,6 0,0 1,-6,-6v-16a6,6 0,0 1,6,-6z" fill="#fb923c"/><path d="M55.1,35.8a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM62.3,43a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM69.5,50.2a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z" fill="#0B1120"/></g><g transform="rotate(-14 43 65)"><path d="M36.2,53.4h16a6,6 0,0 1,6,6v16a6,6 0,0 1,-6,6h-16a6,6 0,0 1,-6,-6v-16a6,6 0,0 1,6,-6z" fill="#000" fill-opacity=".22"/><path d="M35,51h16a6,6 0,0 1,6,6v16a6,6 0,0 1,-6,6h-16a6,6 0,0 1,-6,-6v-16a6,6 0,0 1,6,-6z" fill="#fff"/><path d="M33.1,57.8a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM47.5,57.8a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM40.3,65a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM33.1,72.2a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0zM47.5,72.2a2.7,2.7 0,1 1,5.4,0a2.7,2.7 0,1 1,-5.4,0z" fill="#0B1120"/></g></svg>
     </div>
     <h1>Team Shuffler</h1>
     <p>Enter the names and let the draw decide</p>
@@ -723,7 +714,8 @@
     const first = names.find(n => n !== '') || 'Untitled';
     const label = first.split(' ')[0] + "'s list";
     const now = new Date();
-    const savedAt = String(now.getHours()).padStart(2, '0') + ':' +
+    const savedAt = now.getDate() + '.' + (now.getMonth() + 1) + '. ' +
+                    String(now.getHours()).padStart(2, '0') + ':' +
                     String(now.getMinutes()).padStart(2, '0');
 
     savedRosters.unshift({ 
@@ -809,6 +801,12 @@
   renderParticipantInputs(parseInt(countSelect.value, 10));
   refreshRosterList();
 })();
+
+// Offline support for the installed web app. The Android app bundles the page itself.
+if ('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net' &&
+    location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
