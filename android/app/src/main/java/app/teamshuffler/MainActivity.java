@@ -9,11 +9,13 @@ import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.webkit.WebViewAssetLoader;
 
@@ -55,6 +57,8 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
 
+        webView.addJavascriptInterface(new Bridge(), "ShufflerAndroid");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -77,7 +81,7 @@ public class MainActivity extends Activity {
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
         else webView.loadUrl(START_URL);
 
-        if (savedInstanceState == null) checkForUpdate();
+        if (savedInstanceState == null) checkForUpdate(false);
     }
 
     /* ---------- update check ---------- */
@@ -86,13 +90,15 @@ public class MainActivity extends Activity {
 
     /**
      * Looks up the latest GitHub Release (tagged v1.0.<versionCode>) and offers to download it
-     * when it is newer than this install. Silent when offline or on any error.
+     * when it is newer than this install. The automatic check on launch is throttled and silent;
+     * a manual check (the "Check for updates" button) always runs and reports the result.
      */
-    private void checkForUpdate() {
+    private void checkForUpdate(final boolean manual) {
         final SharedPreferences prefs = getSharedPreferences("update", MODE_PRIVATE);
         long now = System.currentTimeMillis();
-        if (now - prefs.getLong("lastCheck", 0) < UPDATE_CHECK_INTERVAL) return;
+        if (!manual && now - prefs.getLong("lastCheck", 0) < UPDATE_CHECK_INTERVAL) return;
         prefs.edit().putLong("lastCheck", now).apply();
+        if (manual) toast("Checking for updates…");
 
         new Thread(() -> {
             try {
@@ -101,7 +107,7 @@ public class MainActivity extends Activity {
                 c.setConnectTimeout(8000);
                 c.setReadTimeout(8000);
                 c.setRequestProperty("Accept", "application/vnd.github+json");
-                if (c.getResponseCode() != 200) return;
+                if (c.getResponseCode() != 200) throw new IllegalStateException("HTTP " + c.getResponseCode());
                 String body;
                 try (InputStream in = c.getInputStream()) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -110,15 +116,19 @@ public class MainActivity extends Activity {
                     body = buf.toString("UTF-8");
                 }
                 String tag = new JSONObject(body).optString("tag_name", "");
-                int dot = tag.lastIndexOf('.');
-                if (dot < 0) return;
-                final long latest = Long.parseLong(tag.substring(dot + 1));
+                final long latest = Long.parseLong(tag.substring(tag.lastIndexOf('.') + 1));
                 final String name = tag.startsWith("v") ? tag.substring(1) : tag;
                 if (latest > installedVersionCode()) runOnUiThread(() -> showUpdateDialog(name));
-            } catch (Exception ignored) {
-                // No network, rate limit or unexpected response: try again next time.
+                else if (manual) toast("You have the latest version");
+            } catch (Exception e) {
+                // No network, rate limit or unexpected response: the automatic check tries again later.
+                if (manual) toast("Could not check. Are you online?");
             }
         }).start();
+    }
+
+    private void toast(final String msg) {
+        runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show());
     }
 
     private long installedVersionCode() throws Exception {
@@ -141,6 +151,19 @@ public class MainActivity extends Activity {
                 })
                 .setNegativeButton("Later", null)
                 .show();
+    }
+
+    /** Methods index.html can call as window.ShufflerAndroid.*. */
+    private class Bridge {
+        @JavascriptInterface
+        public String getVersion() {
+            return BuildConfig.VERSION_NAME;
+        }
+
+        @JavascriptInterface
+        public void checkForUpdate() {
+            runOnUiThread(() -> MainActivity.this.checkForUpdate(true));
+        }
     }
 
     @Override
