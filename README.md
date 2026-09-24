@@ -5,6 +5,8 @@ Split players into random, balanced teams in one tap. Works on phones and deskto
 ## Features
 * 4–16 participants, 2–4 teams, sizes kept as even as possible.
 * Save name lists and load them again later.
+* Short shuffle animation, then swap any two players between teams with two taps.
+* English, Serbian (Cyrillic) and Norwegian (bokmål); picks the phone's language, switch at the top.
 * Installable as an app (PWA) and works offline after the first visit.
 * Android app (APK) that tells you when a new version is out.
 

@@ -290,53 +290,91 @@
   }
   .btn-link:active { transform: scale(.97); background: rgba(255,255,255,.09); }
   .app-version { font-size: .66rem; color: #55648c; }
+
+  /* ============ LANGUAGE ============ */
+  .lang-switch {
+    display: flex; justify-content: center; gap: 4px; margin: 0 auto 16px;
+    width: max-content; padding: 3px; border-radius: 999px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--stroke);
+  }
+  .lang-switch button {
+    border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer;
+    font-family: inherit; font-size: .72rem; font-weight: 800; letter-spacing: .6px;
+    color: var(--text-dim); background: transparent; transition: background .15s, color .15s;
+  }
+  .lang-switch button.on { color: #1a1206; background: linear-gradient(180deg, var(--accent-2), var(--accent)); }
+
+  /* ============ SWAP AFTER THE DRAW ============ */
+  .swap-hint { font-size: .74rem; color: var(--text-dim); margin: -6px 0 14px; line-height: 1.4; }
+  ol.members li { cursor: pointer; border-radius: 10px; transition: background .15s, box-shadow .15s; }
+  ol.members li.sel {
+    background: rgba(249,115,22,.14); box-shadow: inset 0 0 0 1px rgba(249,115,22,.6);
+  }
+  ol.members li.sel::before { color: #1a1206; background: var(--accent); border-color: transparent; }
+  ol.members li.swapped { animation: swapFlash .7s ease-out; }
+  @keyframes swapFlash { from { background: rgba(52,211,153,.28); } to { background: transparent; } }
+
+  /* ============ DRAW ANIMATION ============ */
+  .results-shuffling .m-name { color: var(--text-dim); filter: blur(.4px); }
+  .results-shuffling ol.members li { cursor: default; }
+  ol.members li.pop { animation: popIn .38s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes popIn { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    ol.members li.pop, ol.members li.swapped, .team-card { animation: none; }
+  }
 </style>
 </head>
 <body>
 <div class="app">
+
+  <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
+    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="sr">SR</button>
+    <button type="button" data-lang="nb">NO</button>
+  </div>
 
   <header>
     <div class="shuffle-icon" aria-hidden="true">
       <svg viewBox="21 21 66 66"><defs><linearGradient id="l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FDBA74"/><stop offset="1" stop-color="#EA580C"/></linearGradient><linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67E8F9"/><stop offset="1" stop-color="#2563EB"/></linearGradient></defs><path d="M0,0H66L42,108H0Z" fill="url(#l)"/><path d="M66,0H108V108H42Z" fill="url(#r)"/><path d="M66,0L42,108" stroke="#0B1120" stroke-opacity=".35" stroke-width="2.5"/><g transform="translate(54 54) scale(1.0) translate(-54 -54)"><path d="M31.5,44a7.5,7.5 0,1 1,15,0a7.5,7.5 0,1 1,-15,0zM27,71v-5.5a12,11.5 0,0 1,24,0v5.5a2.5,2.5 0,0 1,-2.5,2.5h-19a2.5,2.5 0,0 1,-2.5,-2.5zM61.5,44a7.5,7.5 0,1 1,15,0a7.5,7.5 0,1 1,-15,0zM57,71v-5.5a12,11.5 0,0 1,24,0v5.5a2.5,2.5 0,0 1,-2.5,2.5h-19a2.5,2.5 0,0 1,-2.5,-2.5z" fill="#0B1120" fill-opacity=".18" transform="translate(1.2 2.4)"/><path d="M31.5,44a7.5,7.5 0,1 1,15,0a7.5,7.5 0,1 1,-15,0zM27,71v-5.5a12,11.5 0,0 1,24,0v5.5a2.5,2.5 0,0 1,-2.5,2.5h-19a2.5,2.5 0,0 1,-2.5,-2.5zM61.5,44a7.5,7.5 0,1 1,15,0a7.5,7.5 0,1 1,-15,0zM57,71v-5.5a12,11.5 0,0 1,24,0v5.5a2.5,2.5 0,0 1,-2.5,2.5h-19a2.5,2.5 0,0 1,-2.5,-2.5z" fill="#FFFFFF"/><path d="M43,58a11,11 0,1 1,22,0a11,11 0,1 1,-22,0z" fill="#FFFFFF"/><path d="M45,58a9,9 0,1 1,18,0a9,9 0,1 1,-18,0z" fill="#0B1120"/><path d="M47.6,54.4L50.4,61.6L53.2,54.4M60.1,55.3C59.3,54.3 55.9,54.1 55.9,56.3C55.9,58.4 60.4,57.7 60.4,59.9C60.4,62.1 56.6,61.9 55.6,60.7" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
     </div>
     <h1>Team Shuffler</h1>
-    <p>Enter the names and let the draw decide</p>
+    <p data-i18n="subtitle">Enter the names and let the draw decide</p>
   </header>
 
   <!-- STEP 1 -->
   <section class="panel">
-    <div class="panel-title">1 · Participants</div>
+    <div class="panel-title" data-i18n="step1">1 · Participants</div>
     <div class="field">
-      <label for="participantCount">Number of participants</label>
+      <label for="participantCount" data-i18n="numParticipants">Number of participants</label>
       <select id="participantCount"></select>
     </div>
     <div class="field">
-      <label for="teamCount">Number of teams</label>
+      <label for="teamCount" data-i18n="numTeams">Number of teams</label>
       <select id="teamCount">
-        <option value="2">2 teams</option>
-        <option value="3">3 teams</option>
-        <option value="4">4 teams</option>
+        <option value="2"></option>
+        <option value="3"></option>
+        <option value="4"></option>
       </select>
     </div>
   </section>
 
   <!-- STEP 2 -->
   <section class="panel">
-    <div class="panel-title">2 · Names</div>
+    <div class="panel-title" data-i18n="step2">2 · Names</div>
     <div id="participantList"></div>
     <div class="btn-row" style="margin-top:12px">
-      <button class="btn-secondary" id="btnSaveRoster" type="button">Save this list</button>
+      <button class="btn-secondary" id="btnSaveRoster" type="button" data-i18n="saveList">Save this list</button>
     </div>
   </section>
 
-  <button class="btn-generate" id="btnGenerate" type="button">Generate Teams</button>
+  <button class="btn-generate" id="btnGenerate" type="button" data-i18n="generate">Generate Teams</button>
 
   <section id="results" hidden aria-live="polite"></section>
 
-  <p class="footnote">Good luck with the game!</p>
+  <p class="footnote" data-i18n="goodLuck">Good luck with the game!</p>
 
   <div class="updates">
-    <button class="btn-link" id="btnCheckUpdate" type="button">Check for updates</button>
+    <button class="btn-link" id="btnCheckUpdate" type="button" data-i18n="checkUpdates">Check for updates</button>
     <span class="app-version" id="appVersion"></span>
   </div>
 </div>
@@ -345,29 +383,29 @@
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Draw setup">
     <div class="modal-head">
-      <h2>Draw setup</h2>
-      <button class="modal-close" id="modalClose" type="button" aria-label="Close">✕</button>
+      <h2 data-i18n="drawSetup">Draw setup</h2>
+      <button class="modal-close" id="modalClose" type="button" aria-label="Close" data-i18n-aria="close">✕</button>
     </div>
 
-    <p class="hint">
+    <p class="hint" data-i18n="setupHint">
       Tap the position numbers to build rules. Both blocks are optional —
       leave them empty for a fully random draw.
     </p>
 
-    <div class="section-label">Must stay together</div>
-    <p class="hint">Selected positions will always land in the same team.</p>
+    <div class="section-label" data-i18n="together">Must stay together</div>
+    <p class="hint" data-i18n="togetherHint">Selected positions will always land in the same team.</p>
     <div class="chip-grid chip-group" id="groupChips"></div>
 
-    <div class="section-label">Must be kept apart</div>
-    <p class="hint">Selected positions will never share a team with the stay-together group.</p>
+    <div class="section-label" data-i18n="apart">Must be kept apart</div>
+    <p class="hint" data-i18n="apartHint">Selected positions will never share a team with the stay-together group.</p>
     <div class="chip-grid chip-sep" id="sepChips"></div>
 
-    <div class="section-label">Saved lists</div>
+    <div class="section-label" data-i18n="savedLists">Saved lists</div>
     <div id="rosterList"></div>
 
-    <div class="section-label">Reset</div>
+    <div class="section-label" data-i18n="reset">Reset</div>
     <div class="btn-row">
-      <button class="btn-secondary" id="btnClearRules" type="button">Clear all rules</button>
+      <button class="btn-secondary" id="btnClearRules" type="button" data-i18n="clearRules">Clear all rules</button>
     </div>
   </div>
 </div>
@@ -397,12 +435,102 @@
   const MIN_PARTICIPANTS = 4;
   const MAX_PARTICIPANTS = 16;
   const TEAM_COLORS = ['#22d3ee', '#f97316', '#a78bfa', '#34d399', '#f472b6', '#facc15'];
-  const TEAM_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   const rules = {
     group: [],
     separate: []
   };
+
+  /* ============ LANGUAGES ============ */
+  const STRINGS = {
+    en: {
+      subtitle: 'Enter the names and let the draw decide',
+      step1: '1 · Participants', numParticipants: 'Number of participants', numTeams: 'Number of teams',
+      participantsOpt: '{n} participants', teamsOpt: '{n} teams',
+      step2: '2 · Names', player: 'Player {n}', saveList: 'Save this list',
+      generate: 'Generate Teams', shuffling: 'Shuffling…', goodLuck: 'Good luck with the game!',
+      checkUpdates: 'Check for updates', version: 'Version {v}', webApp: 'Web app',
+      drawResult: 'Draw result', team: 'Team {l}', players1: '{n} player', playersN: '{n} players',
+      swapHint: 'Tap two players from different teams to swap them.', swapped: '{a} ⇄ {b}',
+      drawSetup: 'Draw setup', close: 'Close',
+      setupHint: 'Tap the position numbers to build rules. Both blocks are optional — leave them empty for a fully random draw.',
+      together: 'Must stay together', togetherHint: 'Selected positions will always land in the same team.',
+      apart: 'Must be kept apart', apartHint: 'Selected positions will never share a team with the stay-together group.',
+      savedLists: 'Saved lists', reset: 'Reset', clearRules: 'Clear all rules',
+      noLists: 'No saved lists yet', listMeta: '{n} names · {d}', listOf: "{name}'s list",
+      loadList: 'Load list', deleteList: 'Delete list',
+      fillAll: 'Please fill in all {n} names', duplicate: '"{name}" appears more than once',
+      tooManyTeams: 'Too many teams for {n} participants',
+      listDeleted: 'List deleted', nothingToSave: 'Nothing to save yet', listSaved: 'List saved',
+      listLoaded: 'List loaded', rulesCleared: 'All rules cleared',
+      checking: 'Checking for updates…', newVersion: 'New version found. Updating…',
+      latest: 'You have the latest version', cantCheck: 'Could not check. Are you online?'
+    },
+    sr: {
+      subtitle: 'Унесите имена и нека жреб одлучи',
+      step1: '1 · Играчи', numParticipants: 'Број играча', numTeams: 'Број тимова',
+      participantsOpt: '{n} играча', teamsOpt: '{n} тима',
+      step2: '2 · Имена', player: 'Играч {n}', saveList: 'Сачувај ову листу',
+      generate: 'Направи тимове', shuffling: 'Мешам…', goodLuck: 'Срећно у игри!',
+      checkUpdates: 'Провери ажурирање', version: 'Верзија {v}', webApp: 'Веб апликација',
+      drawResult: 'Резултат жреба', team: 'Тим {l}', players1: '{n} играч', playersN: '{n} играча',
+      swapHint: 'Тапните два играча из различитих тимова да их замените.', swapped: '{a} ⇄ {b}',
+      drawSetup: 'Подешавање жреба', close: 'Затвори',
+      setupHint: 'Тапните бројеве позиција да направите правила. Оба дела су опциона — оставите их празне за потпуно насумичан жреб.',
+      together: 'Морају бити заједно', togetherHint: 'Изабране позиције ће увек бити у истом тиму.',
+      apart: 'Морају бити раздвојени', apartHint: 'Изабране позиције никад неће бити у тиму са групом која мора бити заједно.',
+      savedLists: 'Сачуване листе', reset: 'Ресетовање', clearRules: 'Обриши сва правила',
+      noLists: 'Још нема сачуваних листа', listMeta: '{n} имена · {d}', listOf: 'Листа: {name}',
+      loadList: 'Учитај листу', deleteList: 'Обриши листу',
+      fillAll: 'Попуните свих {n} имена', duplicate: '„{name}“ се понавља',
+      tooManyTeams: 'Превише тимова за {n} играча',
+      listDeleted: 'Листа обрисана', nothingToSave: 'Још нема шта да се сачува', listSaved: 'Листа сачувана',
+      listLoaded: 'Листа учитана', rulesCleared: 'Сва правила обрисана',
+      checking: 'Проверавам ажурирања…', newVersion: 'Пронађена нова верзија. Ажурирам…',
+      latest: 'Имате најновију верзију', cantCheck: 'Провера није успела. Јесте ли на интернету?'
+    },
+    nb: {
+      subtitle: 'Skriv inn navnene og la trekningen avgjøre',
+      step1: '1 · Deltakere', numParticipants: 'Antall deltakere', numTeams: 'Antall lag',
+      participantsOpt: '{n} deltakere', teamsOpt: '{n} lag',
+      step2: '2 · Navn', player: 'Spiller {n}', saveList: 'Lagre denne listen',
+      generate: 'Trekk lag', shuffling: 'Trekker…', goodLuck: 'Lykke til med spillet!',
+      checkUpdates: 'Se etter oppdateringer', version: 'Versjon {v}', webApp: 'Nettapp',
+      drawResult: 'Trekningsresultat', team: 'Lag {l}', players1: '{n} spiller', playersN: '{n} spillere',
+      swapHint: 'Trykk på to spillere fra ulike lag for å bytte dem.', swapped: '{a} ⇄ {b}',
+      drawSetup: 'Trekningsoppsett', close: 'Lukk',
+      setupHint: 'Trykk på posisjonsnumrene for å lage regler. Begge delene er valgfrie – la dem stå tomme for en helt tilfeldig trekning.',
+      together: 'Må være sammen', togetherHint: 'Valgte posisjoner havner alltid på samme lag.',
+      apart: 'Må holdes adskilt', apartHint: 'Valgte posisjoner havner aldri på samme lag som gruppen som skal være sammen.',
+      savedLists: 'Lagrede lister', reset: 'Tilbakestill', clearRules: 'Fjern alle regler',
+      noLists: 'Ingen lagrede lister ennå', listMeta: '{n} navn · {d}', listOf: 'Liste: {name}',
+      loadList: 'Last inn liste', deleteList: 'Slett liste',
+      fillAll: 'Fyll inn alle {n} navnene', duplicate: '«{name}» står mer enn én gang',
+      tooManyTeams: 'For mange lag for {n} deltakere',
+      listDeleted: 'Listen er slettet', nothingToSave: 'Ingenting å lagre ennå', listSaved: 'Listen er lagret',
+      listLoaded: 'Listen er lastet inn', rulesCleared: 'Alle regler er fjernet',
+      checking: 'Ser etter oppdateringer…', newVersion: 'Ny versjon funnet. Oppdaterer…',
+      latest: 'Du har nyeste versjon', cantCheck: 'Kunne ikke sjekke. Er du på nett?'
+    }
+  };
+
+  function detectLang() {
+    try {
+      const saved = localStorage.getItem('team_shuffler_lang');
+      if (saved && STRINGS[saved]) return saved;
+    } catch (e) {}
+    const nav = (navigator.language || 'en').toLowerCase();
+    if (/^(sr|hr|bs|sh|cnr)\b/.test(nav)) return 'sr';
+    if (/^(nb|nn|no)\b/.test(nav)) return 'nb';
+    return 'en';
+  }
+  let lang = detectLang();
+
+  function t(key, vars) {
+    let str = (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
+    if (vars) for (const k in vars) str = str.split('{' + k + '}').join(vars[k]);
+    return str;
+  }
 
   let savedRosters = [];
   try {
@@ -444,7 +572,7 @@
   for (let n = MIN_PARTICIPANTS; n <= MAX_PARTICIPANTS; n++) {
     const opt = document.createElement('option');
     opt.value = String(n);
-    opt.textContent = n + ' participants';
+    opt.textContent = t('participantsOpt', { n });
     countSelect.appendChild(opt);
   }
   countSelect.value = '8';
@@ -470,8 +598,8 @@
       input.autocomplete = 'off';
       input.autocapitalize = 'words';
       input.spellcheck = false;
-      input.placeholder = 'Player ' + i;
-      input.setAttribute('aria-label', 'Player ' + i);
+      input.placeholder = t('player', { n: i });
+      input.setAttribute('aria-label', t('player', { n: i }));
       input.value = previous[i - 1] || '';
 
       input.addEventListener('keydown', e => {
@@ -498,7 +626,7 @@
 
     const missing = entries.filter(e => e.name === '');
     if (missing.length) {
-      toast('Please fill in all ' + inputs.length + ' names');
+      toast(t('fillAll', { n: inputs.length }));
       const target = inputs[missing[0].index - 1];
       if (target) target.focus();
       return null;
@@ -507,7 +635,7 @@
     const seen = new Map();
     for (const e of entries) {
       const key = e.name.toLowerCase().replace(/\s+/g, ' ');
-      if (seen.has(key)) { toast('"' + e.name + '" appears more than once'); return null; }
+      if (seen.has(key)) { toast(t('duplicate', { name: e.name })); return null; }
       seen.set(key, true);
     }
     return entries;
@@ -610,50 +738,114 @@
     return bestTeams;
   }
 
-  function renderResults(buckets) {
-    const cardOrder = shuffle(buckets.map((_, i) => i));
-    const now = new Date();
-    const stamp = String(now.getHours()).padStart(2, '0') + ':' +
-                  String(now.getMinutes()).padStart(2, '0');
+  // The last draw, kept so players can be swapped and the view redrawn in another language.
+  let draw = null;         // { buckets, order, stamp }
+  let selected = null;     // { team, idx } while picking a swap partner
+  let shuffleTimer = null;
+  const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let html = '<div class="results-head"><h2>Draw result</h2>' +
+  function renderResults(opts) {
+    opts = opts || {};
+    const { buckets, order, stamp } = draw;
+    let html = '<div class="results-head"><h2>' + esc(t('drawResult')) + '</h2>' +
                '<span class="draw-stamp">' + stamp + '</span></div>';
+    if (!opts.shuffling) html += '<p class="swap-hint">' + esc(t('swapHint')) + '</p>';
 
-    cardOrder.forEach((bucketIdx, visualPos) => {
+    order.forEach((bucketIdx, visualPos) => {
       const members = buckets[bucketIdx];
       const color = TEAM_COLORS[bucketIdx % TEAM_COLORS.length];
+      const count = t(members.length === 1 ? 'players1' : 'playersN', { n: members.length });
 
-      html += '<article class="team-card" style="animation-delay:' + (visualPos * 70) + 'ms">';
+      html += '<article class="team-card" style="' + (opts.animateCards ? 'animation-delay:' + (visualPos * 70) + 'ms' : 'animation:none') + '">';
       html += '  <div class="team-head">';
-      html += '    <span class="team-name"><span class="team-dot" style="color:' + color + '"></span>Team ' + TEAM_LETTERS[visualPos] + '</span>';
-      html += '    <span class="team-count">' + members.length + (members.length === 1 ? ' player' : ' players') + '</span>';
+      html += '    <span class="team-name"><span class="team-dot" style="color:' + color + '"></span>' + esc(t('team', { l: (lang === 'sr' ? 'АБВГДЂ' : 'ABCDEF')[visualPos] })) + '</span>';
+      html += '    <span class="team-count">' + esc(count) + '</span>';
       html += '  </div>';
       html += '  <ol class="members">';
-      for (const m of members) {
-        html += '<li><span class="m-name">' + esc(m.name) + '</span></li>';
-      }
+      members.forEach((m, i) => {
+        let cls = '';
+        if (selected && selected.team === bucketIdx && selected.idx === i) cls += ' sel';
+        if (opts.reveal) cls += ' pop';
+        if (opts.flash && opts.flash.some(f => f.team === bucketIdx && f.idx === i)) cls += ' swapped';
+        const delay = opts.reveal ? ' style="animation-delay:' + (visualPos * 60 + i * 55) + 'ms"' : '';
+        html += '<li class="' + cls.trim() + '" data-team="' + bucketIdx + '" data-idx="' + i + '"' + delay + '>' +
+                '<span class="m-name">' + esc(m.name) + '</span></li>';
+      });
       html += '  </ol></article>';
     });
 
+    resultsEl.classList.toggle('results-shuffling', !!opts.shuffling);
     resultsEl.innerHTML = html;
     resultsEl.hidden = false;
   }
 
+  // Tap a player, then a player in another team: they trade places.
+  resultsEl.addEventListener('click', e => {
+    const li = e.target.closest('li[data-team]');
+    if (!li || !draw || shuffleTimer) return;
+    const team = +li.dataset.team, idx = +li.dataset.idx;
+
+    if (!selected || selected.team === team) {
+      selected = (selected && selected.team === team && selected.idx === idx) ? null : { team, idx };
+      renderResults();
+      return;
+    }
+    const a = draw.buckets[selected.team][selected.idx];
+    const b = draw.buckets[team][idx];
+    draw.buckets[selected.team][selected.idx] = b;
+    draw.buckets[team][idx] = a;
+    const flash = [{ team: selected.team, idx: selected.idx }, { team, idx }];
+    selected = null;
+    renderResults({ flash });
+    toast(t('swapped', { a: a.name, b: b.name }), true);
+  });
+
+  function setGenerating(on) {
+    btnGenerate.disabled = on;
+    btnGenerate.textContent = t(on ? 'shuffling' : 'generate');
+  }
+
   function runDraw() {
+    if (shuffleTimer) return;
     const entries = collectNames();
     if (!entries) return;
 
     const teamCount = parseInt(teamSelect.value, 10);
     if (teamCount > entries.length) {
-      toast('Too many teams for ' + entries.length + ' participants');
+      toast(t('tooManyTeams', { n: entries.length }));
       return;
     }
 
-    renderResults(buildTeams(entries, teamCount));
+    const buckets = buildTeams(entries, teamCount);
+    const now = new Date();
+    draw = {
+      buckets,
+      order: shuffle(buckets.map((_, i) => i)),
+      stamp: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0')
+    };
+    selected = null;
 
     requestAnimationFrame(() =>
       resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
     );
+
+    if (reduceMotion) { renderResults({ animateCards: true }); return; }
+
+    // Short "slot machine" spin: names flicker through the slots, then the real teams land.
+    renderResults({ shuffling: true, animateCards: true });
+    setGenerating(true);
+    const names = entries.map(e => e.name);
+    const slots = () => resultsEl.querySelectorAll('.m-name');
+    const started = Date.now();
+    shuffleTimer = setInterval(() => {
+      slots().forEach(el => { el.textContent = names[Math.floor(Math.random() * names.length)]; });
+      if (Date.now() - started > 1100) {
+        clearInterval(shuffleTimer);
+        shuffleTimer = null;
+        setGenerating(false);
+        renderResults({ reveal: true });
+      }
+    }, 70);
   }
 
   function renderChips(count) {
@@ -691,7 +883,7 @@
 
   function refreshRosterList() {
     if (!savedRosters.length) {
-      rosterListEl.innerHTML = '<div class="empty-note">No saved lists yet</div>';
+      rosterListEl.innerHTML = '<div class="empty-note">' + esc(t('noLists')) + '</div>';
       return;
     }
 
@@ -700,10 +892,10 @@
       html += '<div class="roster-item">';
       html += '  <div class="r-info">';
       html += '    <div class="r-name">' + esc(r.label) + '</div>';
-      html += '    <div class="r-meta">' + r.names.length + ' names · ' + esc(r.savedAt) + '</div>';
+      html += '    <div class="r-meta">' + esc(t('listMeta', { n: r.names.length, d: r.savedAt })) + '</div>';
       html += '  </div>';
-      html += '  <button class="r-btn load" data-load="' + i + '" aria-label="Load list">▶</button>';
-      html += '  <button class="r-btn del" data-del="' + i + '" aria-label="Delete list">✕</button>';
+      html += '  <button class="r-btn load" data-load="' + i + '" aria-label="' + esc(t('loadList')) + '">▶</button>';
+      html += '  <button class="r-btn del" data-del="' + i + '" aria-label="' + esc(t('deleteList')) + '">✕</button>';
       html += '</div>';
     });
     rosterListEl.innerHTML = html;
@@ -716,7 +908,7 @@
         savedRosters.splice(parseInt(b.dataset.del, 10), 1);
         persistRosters();
         refreshRosterList();
-        toast('List deleted', true);
+        toast(t('listDeleted'), true);
       });
     });
   }
@@ -724,10 +916,10 @@
   function saveRoster() {
     const inputs = Array.from(listEl.querySelectorAll('input[type="text"]'));
     const names = inputs.map(i => i.value.trim());
-    if (names.every(n => n === '')) { toast('Nothing to save yet'); return; }
+    if (names.every(n => n === '')) { toast(t('nothingToSave')); return; }
 
-    const first = names.find(n => n !== '') || 'Untitled';
-    const label = first.split(' ')[0] + "'s list";
+    const first = names.find(n => n !== '');
+    const label = t('listOf', { name: first.split(' ')[0] });
     const now = new Date();
     const savedAt = now.getDate() + '.' + (now.getMonth() + 1) + '. ' +
                     String(now.getHours()).padStart(2, '0') + ':' +
@@ -742,7 +934,7 @@
     });
     persistRosters();
     refreshRosterList();
-    toast('List saved', true);
+    toast(t('listSaved'), true);
   }
 
   function loadRoster(i) {
@@ -760,10 +952,9 @@
       rules.separate = [];
     }
 
-    resultsEl.hidden = true;
-    resultsEl.innerHTML = '';
+    clearResults();
     closeModal();
-    toast('List loaded', true);
+    toast(t('listLoaded'), true);
   }
 
   const iconEl = document.querySelector('.shuffle-icon');
@@ -795,9 +986,15 @@
 
   countSelect.addEventListener('change', () => {
     renderParticipantInputs(parseInt(countSelect.value, 10));
+    clearResults();
+  });
+
+  function clearResults() {
+    draw = null;
+    selected = null;
     resultsEl.hidden = true;
     resultsEl.innerHTML = '';
-  });
+  }
 
   teamSelect.addEventListener('change', () => {
     if (!resultsEl.hidden) runDraw();
@@ -810,18 +1007,17 @@
     rules.group = [];
     rules.separate = [];
     renderChips(parseInt(countSelect.value, 10));
-    toast('All rules cleared', true);
+    toast(t('rulesCleared'), true);
   });
 
   // Updates. Android app: the native side asks GitHub Releases and shows the result itself.
   // Web/PWA: compare the page the service worker cached with the one on the server.
   const android = window.ShufflerAndroid;
   const version = android && android.getVersion ? android.getVersion() : '';
-  $('appVersion').textContent = version ? 'Version ' + version : 'Web app';
 
   async function checkForUpdate() {
     if (android && android.checkForUpdate) { android.checkForUpdate(); return; }
-    toast('Checking for updates…', true);
+    toast(t('checking'), true);
     try {
       // Unique URL + no-store so neither the service worker nor the HTTP cache answers.
       const res = await fetch('index.html?check=' + Date.now(), { cache: 'no-store' });
@@ -831,17 +1027,44 @@
       const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
       if (reg) reg.update().catch(() => {});
       if (cached && (await cached.text()) !== fresh) {
-        toast('New version found. Updating…', true);
+        toast(t('newVersion'), true);
         setTimeout(() => location.reload(), 900);
-      } else toast('You have the latest version', true);
+      } else toast(t('latest'), true);
     } catch (err) {
-      toast('Could not check. Are you online?');
+      toast(t('cantCheck'));
     }
   }
   $('btnCheckUpdate').addEventListener('click', checkForUpdate);
 
+  function applyLanguage() {
+    document.documentElement.lang = lang === 'nb' ? 'nb' : lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
+    Array.from(countSelect.options).forEach(o => { o.textContent = t('participantsOpt', { n: o.value }); });
+    Array.from(teamSelect.options).forEach(o => { o.textContent = t('teamsOpt', { n: o.value }); });
+    listEl.querySelectorAll('input[type="text"]').forEach((inp, i) => {
+      inp.placeholder = t('player', { n: i + 1 });
+      inp.setAttribute('aria-label', t('player', { n: i + 1 }));
+    });
+    $('appVersion').textContent = version ? t('version', { v: version }) : t('webApp');
+    $('langSwitch').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+    btnGenerate.textContent = t(shuffleTimer ? 'shuffling' : 'generate');
+    refreshRosterList();
+    if (draw && !shuffleTimer) renderResults();
+    // The Android app shows its own dialogs and toasts; keep them in the same language.
+    if (android && android.setLanguage) android.setLanguage(lang);
+  }
+
+  $('langSwitch').addEventListener('click', e => {
+    const b = e.target.closest('button[data-lang]');
+    if (!b || b.dataset.lang === lang) return;
+    lang = b.dataset.lang;
+    try { localStorage.setItem('team_shuffler_lang', lang); } catch (err) {}
+    applyLanguage();
+  });
+
   renderParticipantInputs(parseInt(countSelect.value, 10));
-  refreshRosterList();
+  applyLanguage();
 })();
 
 // Offline support for the installed web app. The Android app bundles the page itself.
