@@ -1,6 +1,6 @@
 /* Team Shuffler service worker: offline support.
    Bump VERSION when shipping changes to the app shell list below. */
-const VERSION = 'shuffler-v3';
+const VERSION = 'shuffler-v4';
 const SHELL = [
   './',
   './index.html',
