@@ -24,6 +24,9 @@ android {
         versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
         versionName "1.0.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
         // Where the app looks for newer APKs (GitHub Releases of this repo).
+        // Commit of the bundled web app, and a fingerprint of the rest of the APK (see Ota and the workflow).
+        buildConfigField 'String', 'WEB_SHA', "\"${System.getenv('GITHUB_SHA') ?: ''}\""
+        buildConfigField 'String', 'NATIVE_HASH', "\"${System.getenv('NATIVE_HASH') ?: ''}\""
         buildConfigField 'String', 'UPDATE_REPO', "\"${System.getenv('GITHUB_REPOSITORY') ?: 'kosmet-crypto/Team-Shuffler'}\""
     }
 
